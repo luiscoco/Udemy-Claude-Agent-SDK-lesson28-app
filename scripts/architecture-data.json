@@ -1,0 +1,273 @@
+{
+  "lanes": [
+    "Student UI",
+    "TypeScript host",
+    "SDK rules",
+    "Host / MCP",
+    "Lab files"
+  ],
+  "arrows": [
+    [
+      0,
+      1,
+      "1. Validate the fixed rule experiment"
+    ],
+    [
+      1,
+      4,
+      "2. Create disposable fixtures and settings"
+    ],
+    [
+      1,
+      2,
+      "3. Pass allow and deny options"
+    ],
+    [
+      1,
+      2,
+      "4. Enable the project setting source"
+    ],
+    [
+      1,
+      2,
+      "5. Protect writes with an Edit path rule"
+    ],
+    [
+      1,
+      3,
+      "6. Register local MCP servers"
+    ],
+    [
+      2,
+      1,
+      "7. Pass bounded operations without approving"
+    ],
+    [
+      2,
+      3,
+      "8. Resolve remaining calls in the callback"
+    ],
+    [
+      1,
+      2,
+      "9. Start the actual SDK query"
+    ],
+    [
+      2,
+      1,
+      "10. Observe the actual tool inventory"
+    ],
+    [
+      2,
+      0,
+      "11. Preserve native rejection evidence"
+    ],
+    [
+      4,
+      1,
+      "12. Verify files and protected fixtures"
+    ],
+    [
+      1,
+      0,
+      "13. Render the student prediction feedback"
+    ]
+  ],
+  "steps": [
+    {
+      "number": 1,
+      "title": "Validate the fixed rule experiment",
+      "source": "src/rules.ts",
+      "code": "export function validateConfig(value: unknown): RunConfig {\n  if (\n    !value ||\n    typeof value !== \"object\" ||\n    Array.isArray(value) ||\n    !MODES.includes((value as RunConfig).mode)\n  )",
+      "language": "typescript",
+      "explanation": "Only listed modes and three prediction outcomes are accepted. The browser cannot supply arbitrary permission rules or tool commands.",
+      "firstLine": 110,
+      "lastLine": 116,
+      "anchors": [
+        "export function validateConfig(value: unknown): RunConfig {"
+      ],
+      "sourceSHA256": "cf29a56622a1ee7bcfcd955218592007dae38d8f36c51c1650928dc24931beb6",
+      "narration": "Step 1. Only listed modes and three prediction outcomes are accepted. The browser cannot supply arbitrary permission rules or tool commands. This source excerpt shows the corresponding application statement."
+    },
+    {
+      "number": 2,
+      "title": "Create disposable fixtures and settings",
+      "source": "src/workspace.ts",
+      "code": "if (project) {\n    await mkdir(join(cwd, \".claude\"), { recursive: true });\n    await writeFile(\n      join(cwd, \".claude/settings.json\"),\n      JSON.stringify(PROJECT_RULES, null, 2),\n      \"utf-8\",\n    );",
+      "language": "typescript",
+      "explanation": "Project mode writes actual declarative rules into .claude/settings.json in a fresh working directory. The separate mock .env contains only an explicit classroom value.",
+      "firstLine": 32,
+      "lastLine": 38,
+      "anchors": [
+        "if (project) {"
+      ],
+      "sourceSHA256": "c1b31b569960eece0ecd9026b32a31c3d8f84fb5120feabf9f0b6981fcef4cfd",
+      "narration": "Step 2. Project mode writes actual declarative rules into .claude/settings.json in a fresh working directory. The separate mock .env contains only an explicit classroom value. This source excerpt shows the corresponding application statement."
+    },
+    {
+      "number": 3,
+      "title": "Pass allow and deny options",
+      "source": "src/agent.ts",
+      "code": "allowedTools: s.allowed,\n    disallowedTools: s.denied,\n    settingSources: s.project ? [\"project\"] : [],\n    skills: [],\n    plugins: [],",
+      "language": "typescript",
+      "explanation": "Allow entries pre-approve matching calls. A bare deny removes the tool definition; a scoped deny leaves it available for a matching runtime rejection.",
+      "firstLine": 75,
+      "lastLine": 79,
+      "anchors": [
+        "allowedTools: s.allowed,"
+      ],
+      "sourceSHA256": "24ed65a05f339962c967724c96f549a3e464b7f18a5581a360a694d48979ccc9",
+      "narration": "Step 3. Allow entries pre-approve matching calls. A bare deny removes the tool definition; a scoped deny leaves it available for a matching runtime rejection. This source excerpt shows the corresponding application statement."
+    },
+    {
+      "number": 4,
+      "title": "Enable the project setting source",
+      "source": "src/agent.ts",
+      "code": "settingSources: s.project ? [\"project\"] : [],\n    skills: [],\n    plugins: [],\n    strictMcpConfig: true,",
+      "language": "typescript",
+      "explanation": "The project source must be enabled for the generated settings file to contribute allow, deny and ask rules. Other experiments use an empty settings-source list.",
+      "firstLine": 77,
+      "lastLine": 80,
+      "anchors": [
+        "settingSources: s.project ? [\"project\"] : [],"
+      ],
+      "sourceSHA256": "24ed65a05f339962c967724c96f549a3e464b7f18a5581a360a694d48979ccc9",
+      "narration": "Step 4. The project source must be enabled for the generated settings file to contribute allow, deny and ask rules. Other experiments use an empty settings-source list. This source excerpt shows the corresponding application statement."
+    },
+    {
+      "number": 5,
+      "title": "Protect writes with an Edit path rule",
+      "source": "src/rules.ts",
+      "code": "\"path-deny\": {\n    stage: \"Edit(path) governs Write\",\n    outcome: \"mixed\",\n    mode: \"default\",\n    allowed: [\"Write\"],\n    denied: [\"Edit(./protected/**)\"],\n    tools: [\"Write\"],\n  },",
+      "language": "typescript",
+      "explanation": "The live relative Edit path rule governs a model Write to protected/report.txt. An independent Write to result.txt remains eligible for approval.",
+      "firstLine": 73,
+      "lastLine": 80,
+      "anchors": [
+        "\"path-deny\": {"
+      ],
+      "sourceSHA256": "cf29a56622a1ee7bcfcd955218592007dae38d8f36c51c1650928dc24931beb6",
+      "narration": "Step 5. The live relative Edit path rule governs a model Write to protected/report.txt. An independent Write to result.txt remains eligible for approval. This source excerpt shows the corresponding application statement."
+    },
+    {
+      "number": 6,
+      "title": "Register local MCP servers",
+      "source": "src/classroom-tools.ts",
+      "code": "return Object.fromEntries(\n    [\"classroom\", \"archive\"].map((name) => [\n      name,\n      createSdkMcpServer({\n        name,\n        version: \"1.0.0\",\n        tools: [\n          tool(",
+      "language": "typescript",
+      "explanation": "Two literal server names expose real read_lesson handlers. The classroom allow glob matches one server; the archive call remains a separate permission decision.",
+      "firstLine": 8,
+      "lastLine": 15,
+      "anchors": [
+        "return Object.fromEntries("
+      ],
+      "sourceSHA256": "cdd95463bf9336f0b37fc5ee4ec9702da8e0cad8d6567bc21ea33621aa80a1e3",
+      "narration": "Step 6. Two literal server names expose real read_lesson handlers. The classroom allow glob matches one server; the archive call remains a separate permission decision. This source excerpt shows the corresponding application statement."
+    },
+    {
+      "number": 7,
+      "title": "Pass bounded operations without approving",
+      "source": "src/agent.ts",
+      "code": "const pass = hostAllows(\n                workspace.cwd,\n                c.mode,\n                input.tool_name,\n                input.tool_input as Record<string, unknown>,\n              );\n              record({\n                phase: \"hook\",",
+      "language": "typescript",
+      "explanation": "The host guard narrows inputs to this exercise, then returns no permission decision for valid operations. This lets SDK allow and deny rules produce the observed outcome.",
+      "firstLine": 106,
+      "lastLine": 113,
+      "anchors": [
+        "const pass = hostAllows("
+      ],
+      "sourceSHA256": "24ed65a05f339962c967724c96f549a3e464b7f18a5581a360a694d48979ccc9",
+      "narration": "Step 7. The host guard narrows inputs to this exercise, then returns no permission decision for valid operations. This lets SDK allow and deny rules produce the observed outcome. This source excerpt shows the corresponding application statement."
+    },
+    {
+      "number": 8,
+      "title": "Resolve remaining calls in the callback",
+      "source": "src/agent.ts",
+      "code": "canUseTool: async (name, input) => {\n      const allow =\n        c.mode === \"project-settings\" &&\n        name === \"Write\" &&\n        hostAllows(workspace.cwd, c.mode, name, input);\n      record({\n        phase: \"callback\",\n        tool: name,",
+      "language": "typescript",
+      "explanation": "Only the project-settings Write is allowed here. Other unresolved requests are denied. Compare a callback rejection with an absent tool or an automatic mode approval.",
+      "firstLine": 149,
+      "lastLine": 156,
+      "anchors": [
+        "canUseTool: async (name, input) => {"
+      ],
+      "sourceSHA256": "24ed65a05f339962c967724c96f549a3e464b7f18a5581a360a694d48979ccc9",
+      "narration": "Step 8. Only the project-settings Write is allowed here. Other unresolved requests are denied. Compare a callback rejection with an absent tool or an automatic mode approval. This source excerpt shows the corresponding application statement."
+    },
+    {
+      "number": 9,
+      "title": "Start the actual SDK query",
+      "source": "src/agent.ts",
+      "code": "const run = query({\n    prompt:\n      PROMPTS[c.mode] +\n      `\\nClassroom cwd: ${workspace.cwd}\\nUse these absolute file paths for requested operations:\\n${paths.join(\"\\n\")}`,\n    options,",
+      "language": "typescript",
+      "explanation": "Each query uses its fresh directory and fixed tasks. Tools that were removed cannot be requested; the model must not fabricate an unavailable call.",
+      "firstLine": 225,
+      "lastLine": 229,
+      "anchors": [
+        "const run = query({"
+      ],
+      "sourceSHA256": "24ed65a05f339962c967724c96f549a3e464b7f18a5581a360a694d48979ccc9",
+      "narration": "Step 9. Each query uses its fresh directory and fixed tasks. Tools that were removed cannot be requested; the model must not fabricate an unavailable call. This source excerpt shows the corresponding application statement."
+    },
+    {
+      "number": 10,
+      "title": "Observe the actual tool inventory",
+      "source": "src/agent.ts",
+      "code": "inventory = message.tools;\n        emit({\n          type: \"initialized\",\n          model: message.model,\n          sessionId: message.session_id,\n          tools: message.tools,",
+      "language": "typescript",
+      "explanation": "Preserve reported initialization names and compare them with actual attempts, native denials and MCP handler execution. Bare Write removal and MCP wildcard behavior differ in the pinned runtime.",
+      "firstLine": 241,
+      "lastLine": 246,
+      "anchors": [
+        "inventory = message.tools;"
+      ],
+      "sourceSHA256": "24ed65a05f339962c967724c96f549a3e464b7f18a5581a360a694d48979ccc9",
+      "narration": "Step 10. Preserve reported initialization names and compare them with actual attempts, native denials and MCP handler execution. Bare Write removal and MCP wildcard behavior differ in the pinned runtime. This source excerpt shows the corresponding application statement."
+    },
+    {
+      "number": 11,
+      "title": "Preserve native rejection evidence",
+      "source": "src/agent.ts",
+      "code": "if (block.is_error) nativeErrors++;\n            emit({\n              type: \"native-result\",\n              name: names.get(block.tool_use_id) || block.tool_use_id,\n              isError: Boolean(block.is_error),\n              content: JSON.parse(redact(JSON.stringify(block.content))),\n            });",
+      "language": "typescript",
+      "explanation": "A denied operation yields native feedback. A successful final model explanation does not establish that every requested operation executed.",
+      "firstLine": 261,
+      "lastLine": 267,
+      "anchors": [
+        "if (block.is_error) nativeErrors++;"
+      ],
+      "sourceSHA256": "24ed65a05f339962c967724c96f549a3e464b7f18a5581a360a694d48979ccc9",
+      "narration": "Step 11. A denied operation yields native feedback. A successful final model explanation does not establish that every requested operation executed. This source excerpt shows the corresponding application statement."
+    },
+    {
+      "number": 12,
+      "title": "Verify files and protected fixtures",
+      "source": "src/workspace.ts",
+      "code": "fileCreated: fileContents !== null,\n        fileContents,\n        protectedFixtureUnchanged:\n          (await contents(\"permission-target.txt\")) === FIXTURE,\n        protectedWriteCreated:\n          (await contents(\"protected/report.txt\")) !== null,",
+      "language": "typescript",
+      "explanation": "Host checks compare actual output content, the removal fixture, protected-write absence and the mock environment fixture. Evidence is collected before cleanup.",
+      "firstLine": 54,
+      "lastLine": 59,
+      "anchors": [
+        "fileCreated: fileContents !== null,"
+      ],
+      "sourceSHA256": "c1b31b569960eece0ecd9026b32a31c3d8f84fb5120feabf9f0b6981fcef4cfd",
+      "narration": "Step 12. Host checks compare actual output content, the removal fixture, protected-write absence and the mock environment fixture. Evidence is collected before cleanup. This source excerpt shows the corresponding application statement."
+    },
+    {
+      "number": 13,
+      "title": "Render the student prediction feedback",
+      "source": "src/client.ts",
+      "code": "$(\"verdict\").textContent =\n      `Observed: ${e.observedOutcome}. Prediction: ${e.prediction || \"not provided\"}. ` +\n      feedback;",
+      "language": "typescript",
+      "explanation": "Compare the student prediction with observed execute, block or mixed outcomes. Keep configuration reference labels separate from live event evidence.",
+      "firstLine": 63,
+      "lastLine": 65,
+      "anchors": [
+        "$(\"verdict\").textContent ="
+      ],
+      "sourceSHA256": "619ae0d989858f11ba77546f3fcb255cf7cfa9649323e21079f8fdad392c5776",
+      "narration": "Step 13. Compare the student prediction with observed execute, block or mixed outcomes. Keep configuration reference labels separate from live event evidence. This source excerpt shows the corresponding application statement."
+    }
+  ]
+}

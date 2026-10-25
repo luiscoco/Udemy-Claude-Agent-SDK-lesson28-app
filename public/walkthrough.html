@@ -1,0 +1,70 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Agent SDK LESSON 28 · How the app &lt;em&gt;was built.&lt;/em&gt;</title><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/code-highlighting.css"></head><body><main><div class="brand"><a href="/">How <span>Claude Agent SDK</span> Works</a><span class="badge">LESSON 28 / ALLOW AND DENY RULES</span></div><header class="hero"><div><div class="eyebrow">DECLARE · MATCH · VERIFY</div><h1>How the app <em>was built.</em></h1><p class="lead">Every architecture step has source-linked coloured code.</p></div><img src="/astronaut.png" alt="Course astronaut mascot"></header><nav class="nav" aria-label="Application sections"><a href="/">Application lab</a><a href="/learn.html">What you will learn</a><a href="/run.html">How to run</a><a href="/architecture.html">Architecture & workflow</a><a href="/walkthrough.html" aria-current="page">Code walkthrough</a><button id="theme" type="button">Dark mode</button></nav><div class="grid"><article class="card"><span class="number">01</span><h3>Allow is pre-approval</h3><p>An allow list is not the available-tool inventory and does not constrain bypass mode. Unlisted calls can reach the mode or callback. Reads in the working directory may already qualify as safe built-in approvals, so a successful read alone does not prove a particular allow entry decided it.</p></article><article class="card"><span class="number">02</span><h3>Bare, scoped and wildcard deny</h3><p>Bare Write removal is verified separately. Scoped rules match commands or paths as written. The supplied slides and current docs describe wildcard denial as removal. In the pinned SDK MCP experiment, initialization still reports MCP names and actual calls receive permission denials. This lab verifies denied execution, not MCP definition removal. The global * form is reference syntax, not another live experiment.</p></article><article class="card"><span class="number">03</span><h3>MCP literal-server patterns</h3><p>Valid allow forms include mcp__classroom__* and mcp__classroom__read_*. The server segment must be literal; mcp__*__read_lesson is not a valid MCP allow pattern. The live experiment uses local classroom and archive servers, not external accounts.</p></article><article class="card"><span class="number">04</span><h3>Path anchors and write coverage</h3><p>The live path experiment uses Edit(./protected/**). Current SDK docs specify Edit(path) for Write and NotebookEdit too; Write(path) is not equivalent. A double slash marks an absolute path, such as Edit(//secrets/**), while one slash anchors at the rule source. These anchor examples are reference syntax, not tested filesystem targets.</p></article><article class="card"><span class="number">05</span><h3>Project source and mock .env</h3><p>Only project mode enables settingSources project and writes actual .claude/settings.json. Read(./.env) protects a disposable mock file. The application’s real .env is never served or placed in the agent working directory.</p></article><article class="card"><span class="number">06</span><h3>Ask before a write</h3><p>The supplied lesson suggests asking before git push. This application demonstrates the same ask-to-callback mechanism using a fixed local Write; no git push is performed or simulated. The callback is programmed classroom policy, not a human approval dialog.</p></article><article class="card"><span class="number">07</span><h3>dontAsk has qualifications</h3><p>Pair pre-approved reviewer tools with dontAsk to deny calls that would prompt. Safe built-in operations may still run. Explicitly choose tools or use bare denies when removal is required. SDK permission rules alone are not an operating-system sandbox.</p></article><article class="card"><span class="number">08</span><h3>Evidence and API cost</h3><p>The nine experiments use actual SDK queries with a $0.40 budget threshold per query, not a prepaid cap. Hooks, callback calls, initialization names, native feedback, MCP handlers and host file checks are observed evidence. Media, dependencies and real credentials remain excluded from Git.</p></article></div><section class="step workflow-step" id="workflow-step-01"><span class="number">01</span><h3>1. Validate the fixed rule experiment</h3><p>Only listed modes and three prediction outcomes are accepted. The browser cannot supply arbitrary permission rules or tool commands.</p><p class="source">Source: src/rules.ts · lines 110–116 · selected source; surrounding code omitted</p><pre><code class="language-typescript">export function validateConfig(value: unknown): RunConfig {
+  if (
+    !value ||
+    typeof value !== &quot;object&quot; ||
+    Array.isArray(value) ||
+    !MODES.includes((value as RunConfig).mode)
+  )</code></pre></section><section class="step workflow-step" id="workflow-step-02"><span class="number">02</span><h3>2. Create disposable fixtures and settings</h3><p>Project mode writes actual declarative rules into .claude/settings.json in a fresh working directory. The separate mock .env contains only an explicit classroom value.</p><p class="source">Source: src/workspace.ts · lines 32–38 · selected source; surrounding code omitted</p><pre><code class="language-typescript">if (project) {
+    await mkdir(join(cwd, &quot;.claude&quot;), { recursive: true });
+    await writeFile(
+      join(cwd, &quot;.claude/settings.json&quot;),
+      JSON.stringify(PROJECT_RULES, null, 2),
+      &quot;utf-8&quot;,
+    );</code></pre></section><section class="step workflow-step" id="workflow-step-03"><span class="number">03</span><h3>3. Pass allow and deny options</h3><p>Allow entries pre-approve matching calls. A bare deny removes the tool definition; a scoped deny leaves it available for a matching runtime rejection.</p><p class="source">Source: src/agent.ts · lines 75–79 · selected source; surrounding code omitted</p><pre><code class="language-typescript">allowedTools: s.allowed,
+    disallowedTools: s.denied,
+    settingSources: s.project ? [&quot;project&quot;] : [],
+    skills: [],
+    plugins: [],</code></pre></section><section class="step workflow-step" id="workflow-step-04"><span class="number">04</span><h3>4. Enable the project setting source</h3><p>The project source must be enabled for the generated settings file to contribute allow, deny and ask rules. Other experiments use an empty settings-source list.</p><p class="source">Source: src/agent.ts · lines 77–80 · selected source; surrounding code omitted</p><pre><code class="language-typescript">settingSources: s.project ? [&quot;project&quot;] : [],
+    skills: [],
+    plugins: [],
+    strictMcpConfig: true,</code></pre></section><section class="step workflow-step" id="workflow-step-05"><span class="number">05</span><h3>5. Protect writes with an Edit path rule</h3><p>The live relative Edit path rule governs a model Write to protected/report.txt. An independent Write to result.txt remains eligible for approval.</p><p class="source">Source: src/rules.ts · lines 73–80 · selected source; surrounding code omitted</p><pre><code class="language-typescript">&quot;path-deny&quot;: {
+    stage: &quot;Edit(path) governs Write&quot;,
+    outcome: &quot;mixed&quot;,
+    mode: &quot;default&quot;,
+    allowed: [&quot;Write&quot;],
+    denied: [&quot;Edit(./protected/**)&quot;],
+    tools: [&quot;Write&quot;],
+  },</code></pre></section><section class="step workflow-step" id="workflow-step-06"><span class="number">06</span><h3>6. Register local MCP servers</h3><p>Two literal server names expose real read_lesson handlers. The classroom allow glob matches one server; the archive call remains a separate permission decision.</p><p class="source">Source: src/classroom-tools.ts · lines 8–15 · selected source; surrounding code omitted</p><pre><code class="language-typescript">return Object.fromEntries(
+    [&quot;classroom&quot;, &quot;archive&quot;].map((name) =&gt; [
+      name,
+      createSdkMcpServer({
+        name,
+        version: &quot;1.0.0&quot;,
+        tools: [
+          tool(</code></pre></section><section class="step workflow-step" id="workflow-step-07"><span class="number">07</span><h3>7. Pass bounded operations without approving</h3><p>The host guard narrows inputs to this exercise, then returns no permission decision for valid operations. This lets SDK allow and deny rules produce the observed outcome.</p><p class="source">Source: src/agent.ts · lines 106–113 · selected source; surrounding code omitted</p><pre><code class="language-typescript">const pass = hostAllows(
+                workspace.cwd,
+                c.mode,
+                input.tool_name,
+                input.tool_input as Record&lt;string, unknown&gt;,
+              );
+              record({
+                phase: &quot;hook&quot;,</code></pre></section><section class="step workflow-step" id="workflow-step-08"><span class="number">08</span><h3>8. Resolve remaining calls in the callback</h3><p>Only the project-settings Write is allowed here. Other unresolved requests are denied. Compare a callback rejection with an absent tool or an automatic mode approval.</p><p class="source">Source: src/agent.ts · lines 149–156 · selected source; surrounding code omitted</p><pre><code class="language-typescript">canUseTool: async (name, input) =&gt; {
+      const allow =
+        c.mode === &quot;project-settings&quot; &amp;&amp;
+        name === &quot;Write&quot; &amp;&amp;
+        hostAllows(workspace.cwd, c.mode, name, input);
+      record({
+        phase: &quot;callback&quot;,
+        tool: name,</code></pre></section><section class="step workflow-step" id="workflow-step-09"><span class="number">09</span><h3>9. Start the actual SDK query</h3><p>Each query uses its fresh directory and fixed tasks. Tools that were removed cannot be requested; the model must not fabricate an unavailable call.</p><p class="source">Source: src/agent.ts · lines 225–229 · selected source; surrounding code omitted</p><pre><code class="language-typescript">const run = query({
+    prompt:
+      PROMPTS[c.mode] +
+      `\nClassroom cwd: ${workspace.cwd}\nUse these absolute file paths for requested operations:\n${paths.join(&quot;\n&quot;)}`,
+    options,</code></pre></section><section class="step workflow-step" id="workflow-step-10"><span class="number">10</span><h3>10. Observe the actual tool inventory</h3><p>Preserve reported initialization names and compare them with actual attempts, native denials and MCP handler execution. Bare Write removal and MCP wildcard behavior differ in the pinned runtime.</p><p class="source">Source: src/agent.ts · lines 241–246 · selected source; surrounding code omitted</p><pre><code class="language-typescript">inventory = message.tools;
+        emit({
+          type: &quot;initialized&quot;,
+          model: message.model,
+          sessionId: message.session_id,
+          tools: message.tools,</code></pre></section><section class="step workflow-step" id="workflow-step-11"><span class="number">11</span><h3>11. Preserve native rejection evidence</h3><p>A denied operation yields native feedback. A successful final model explanation does not establish that every requested operation executed.</p><p class="source">Source: src/agent.ts · lines 261–267 · selected source; surrounding code omitted</p><pre><code class="language-typescript">if (block.is_error) nativeErrors++;
+            emit({
+              type: &quot;native-result&quot;,
+              name: names.get(block.tool_use_id) || block.tool_use_id,
+              isError: Boolean(block.is_error),
+              content: JSON.parse(redact(JSON.stringify(block.content))),
+            });</code></pre></section><section class="step workflow-step" id="workflow-step-12"><span class="number">12</span><h3>12. Verify files and protected fixtures</h3><p>Host checks compare actual output content, the removal fixture, protected-write absence and the mock environment fixture. Evidence is collected before cleanup.</p><p class="source">Source: src/workspace.ts · lines 54–59 · selected source; surrounding code omitted</p><pre><code class="language-typescript">fileCreated: fileContents !== null,
+        fileContents,
+        protectedFixtureUnchanged:
+          (await contents(&quot;permission-target.txt&quot;)) === FIXTURE,
+        protectedWriteCreated:
+          (await contents(&quot;protected/report.txt&quot;)) !== null,</code></pre></section><section class="step workflow-step" id="workflow-step-13"><span class="number">13</span><h3>13. Render the student prediction feedback</h3><p>Compare the student prediction with observed execute, block or mixed outcomes. Keep configuration reference labels separate from live event evidence.</p><p class="source">Source: src/client.ts · lines 63–65 · selected source; surrounding code omitted</p><pre><code class="language-typescript">$(&quot;verdict&quot;).textContent =
+      `Observed: ${e.observedOutcome}. Prediction: ${e.prediction || &quot;not provided&quot;}. ` +
+      feedback;</code></pre></section><footer>CLAUDE AGENT SDK · LESSON 28 · ALLOW · DENY · PATHS · PROJECT SETTINGS<br>TypeScript · local runtime · API key stays on the server</footer></main><script src="/navigation.js"></script><script src="/prism.js"></script><script src="/prism-markup.min.js"></script><script src="/prism-yaml.min.js"></script><script src="/prism-markdown.min.js"></script><script src="/prism-python.min.js"></script><script src="/code-highlighting.js"></script><script src="/marked.umd.js"></script><script src="/purify.min.js"></script></body></html>
